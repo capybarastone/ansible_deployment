@@ -23,9 +23,9 @@ sudo chmod 777 /home/deployment/.ssh/deployment
 sudo chown -R deployment:deployment /home/deployment/.ssh
 
 # Copy SSH Keys to Endpoint Devices (Assumes that deployment user is already added to end point systems)
-sudo ssh-copy-id -i /home/deployment/.ssh/deployment.pub deployment@192.168.1.100
-sudo ssh-copy-id -i /home/deployment/.ssh/deployment.pub deployment@192.168.1.101
-sudo ssh-copy-id -i /home/deployment/.ssh/deployment.pub deployment@192.168.1.102
+ssh-copy-id -i /home/deployment/.ssh/deployment.pub deployment@192.168.1.100
+ssh-copy-id -i /home/deployment/.ssh/deployment.pub deployment@192.168.1.101
+ssh-copy-id -i /home/deployment/.ssh/deployment.pub deployment@192.168.1.102
 
 # Config SSH Agent
 eval $(ssh-agent)
