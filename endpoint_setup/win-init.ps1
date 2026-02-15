@@ -1,5 +1,5 @@
 ## Script used to intitialize test environment setup on windows
-# To Use: As Admin do - "wget https://raw.githubusercontent.com/capybarastone/ansible_deployment/refs/heads/main/endpoint_setup/win-init.ps1", then ".\win-init.ps1"
+# To Use: As Admin do - "wget -Uri https://raw.githubusercontent.com/capybarastone/ansible_deployment/refs/heads/main/endpoint_setup/win-init.ps1 -Outfile .\win-init.ps1", then ".\win-init.ps1"
 
 # Install OpenSSH Server for Windows host
 Add-WindowsCapability -Online -Name OpenSSH.Server~~~~0.0.1.0
