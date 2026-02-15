@@ -1,5 +1,5 @@
 ## Script used to install ansible onto a Ubuntu Based System
-# To Use: "wget https://raw.githubusercontent.com/capabaastone/ansible_deployment/refs/heads/main/mgmt_setup/install_ansible.bash", then "sudo bash install_ansible.sh"
+# To Use: "wget https://raw.githubusercontent.com/capybarastone/ansible_deployment/refs/heads/main/mgmt_setup/install_ansible.bash", then "sudo bash install_ansible.sh"
 
 # Install ansible onto mgmt system
 sudo apt install sshpass python3-paramiko git
@@ -32,7 +32,8 @@ eval $(ssh-agent)
 ssh-add -t 3h
 
 # Download Deployment Inventory File
-wget -O ~/ansible/inventory.yml https://raw.githubusercontent.com/capabaastone/ansible_deployment/refs/heads/main/mgmt_setup/inventory.yml
+wget -O ~/ansible/inventory.yml https://raw.githubusercontent.com/capybarastone/ansible_deployment/refs/heads/main/mgmt_setup/inventory.yml
+
 
 # Modify settings for ansible config
 sudo cat >> ~/.ansible.cfg << EOF                                                               
