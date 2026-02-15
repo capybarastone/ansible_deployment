@@ -14,8 +14,4 @@ all:
       hosts:
         192.168.1.101
       vars:
-        ansible_shell_type: cmd
-        ansible_become: yes
-        ansible_connection: ssh
-        ansible_become_user: deployment
-        ansible_user: deployment
+        ansible_shell_type=powershell
