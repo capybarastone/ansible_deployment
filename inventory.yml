@@ -1,0 +1,26 @@
+---
+
+linux:
+  hosts:
+    mgmt:
+      ansible_host: 192.168.1.10
+    backend:
+      ansible_host: 192.168.1.100
+    endpoint_deb:
+      ansible_host: 192.168.1.102
+
+windows:
+  hosts:
+    endpoint_win:
+      ansible_host: 192.168.1.101
+  vars:
+    ansible_shell_type: powershell
+      #    ansible_connection: ssh
+      #    ansible_user: deployment
+
+all:
+  vars:
+    ansible_user: deployment
+  children:
+    linux:
+    windows:

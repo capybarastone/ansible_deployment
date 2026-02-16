@@ -1,0 +1,20 @@
+---
+# Playbook used to test ping function on linux/windows hosts
+
+- name: Ping Test Linux
+  hosts: linux
+  gather_facts: false
+  
+  tasks:
+  - name: Run ping for linux
+    ansible.builtin.ping:
+
+- name: Ping Test Windows
+  hosts: windows
+  gather_facts: false
+
+  tasks:
+  - name: Run ping for windows
+    ansible.windows.win_ping:
+
+

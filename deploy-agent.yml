@@ -1,0 +1,88 @@
+---
+- name: Set up Capy Management
+  hosts: linux
+  gather_facts: false
+
+  tasks:
+
+#    - name: Clone repo
+#      delegate_to: mgmt
+#      run_once: true
+#      ansible.builtin.git:
+#        repo: "https://github.com/capybarastone/endpoint"
+#        dest: '/tmp/ansible/endpoint'
+#        clone: true
+#        update: true
+#
+#    - name: Install build-essential
+#      delegate_to: mgmt
+#      run_once: true
+#      become: true
+#      ansible.builtin.apt:
+#        name: build-essential
+#        state: present
+#        update_cache: yes
+#
+#    - name: Ensure no Go via APT
+#      delegate_to: mgmt
+#      run_once: true
+#      become: true
+#      ansible.builtin.apt:
+#        name: golang-go
+#        state: absent
+#
+#    - name: Get Go Tarball
+#      delegate_to: mgmt
+#      run_once: true
+#      ansible.builtin.get_url:
+#        url: https://go.dev/dl/go1.26.0.linux-amd64.tar.gz
+#        dest: /tmp/go.tar.gz
+#        mode: '0644'
+#
+#    - name: untar go archive
+#      delegate_to: mgmt
+#      run_once: true
+#      become: true
+#      ansible.builtin.shell:
+#        cmd: "tar -C /usr/local -xzf /tmp/go.tar.gz"
+#
+#    - name: Build endpoint for Linux (on MGMT)
+#      delegate_to: mgmt
+#      run_once: true
+#      ansible.builtin.shell: |
+#        cd endpoint
+#        chmod +x ./make.sh
+#        PATH=/usr/local/go/bin:$PATH ./make.sh build
+#        ls
+  
+    - name: Copy exec (linux)
+      ansible.builtin.copy:
+        src: /home/capped-adm/Documents/endpoint/bin/capyendpoint
+        dest: /home/deployment/capyendpoint
+        owner: deployment
+        group: deployment
+        mode: '0755'
+
+    - name: Copy config.toml
+      ansible.builtin.copy:
+        src: /home/capped-adm/Documents/endpoint/bin/config.toml
+        dest: /home/deployment/config.toml
+        owner: deployment
+        group: deployment
+        mode: '0644'
+
+
+- name: Set up capyagent Windows
+  hosts: windows
+  gather_facts: false
+
+  tasks:
+    - name: Copy Endpoint EXE
+      ansible.windows.win_copy:
+        src: /home/capped-adm/Documents/endpoint/bin/capyendpoint.exe
+        dest: C:\Users\deployment\Desktop\capyendppoint.exe
+
+    - name: Copy Endpoint config
+      ansible.windows.win_copy:
+        src: /home/capped-adm/Documents/endpoint/bin/config.toml
+        dest: C:\Users\deployment\Desktop\config.toml

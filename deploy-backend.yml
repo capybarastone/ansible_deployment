@@ -1,0 +1,20 @@
+---
+- name: Set up Capy Management Backend
+  hosts: backend
+  gather_facts: false
+
+  tasks:
+    - name: Install apt dependencies
+      ansible.builtin.shell: |
+        sudo apt update && sudo apt install -y python3-pip python3-venv pipx git
+    - name: Clone repo
+      ansible.builtin.shell: |
+        cd ~
+        [[ -d backend ]] && rm -rfv backend
+        git clone https://github.com/capybarastone/backend
+    - name: Sync pip dependencies with UV
+      ansible.builtin.shell: |
+        cd ~
+        pipx install uv
+        cd ~/backend
+        ~/.local/bin/uv sync

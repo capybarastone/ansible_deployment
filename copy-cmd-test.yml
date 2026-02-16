@@ -1,0 +1,33 @@
+---
+# Test ansible playbook used to copy a file and running a command
+
+- name: Linux copy file and run command
+  hosts: linux
+  gather_facts: false
+
+  tasks:
+    - name: Copy File Test
+      ansible.builtin.copy:
+        src: /home/capped-adm/Documents/cool.txt
+        dest: /home/deployment/cool.txt
+        owner: deployment
+        group: deployment
+        mode: '0644'
+
+    - name: Run Command Test
+      ansible.builtin.command:
+        cmd: "echo howdy"
+
+- name: Windows copy file and run command
+  hosts: windows
+  gather_facts: false
+
+  tasks:
+    - name: Copy File Test
+      ansible.windows.win_copy:
+        src: /home/capped-adm/Documents/buh.png
+        dest: C:\Temp\
+
+    - name: Run Command Test
+      ansible.windows.win_command:
+        cmd: 'hostname'
