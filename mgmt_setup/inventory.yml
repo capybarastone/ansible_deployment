@@ -1,17 +1,21 @@
 ---
+linux:
+  hosts:
+    mgmt:
+      ansible_host: 192.168.1.10
+    backend:
+      ansible_host: 192.168.1.100
+    endpoint_deb:
+      ansible_host: 192.168.1.102
+
+windows:
+  hosts:
+    endpoint_win:
+      ansible_host: 192.168.101
+  vars:
+    ansible_shell_type: powershell
+
 all:
   children:
-    mgmt:
-      hosts:
-        192.168.1.10
-    backend:
-      hosts:
-        192.168.1.100
-    endpoint_deb:
-      hosts:
-        192.168.1.102
-    endpoint_win:
-      hosts:
-        192.168.1.101
-      vars:
-        ansible_shell_type=powershell
+    linux:
+    windows:
