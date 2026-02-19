@@ -10,7 +10,7 @@
     - name: Clone repo
       ansible.builtin.shell: |
         cd ~
-        [[ -d backend ]] && rm -rfv backend
+        [ -d backend ] && rm -rfv backend
         git clone https://github.com/capybarastone/backend
     - name: Sync pip dependencies with UV
       ansible.builtin.shell: |
