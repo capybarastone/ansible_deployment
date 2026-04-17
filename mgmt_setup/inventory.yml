@@ -19,3 +19,5 @@ all:
   children:
     linux:
     windows:
+  vars:
+    ansible_user: deployment
