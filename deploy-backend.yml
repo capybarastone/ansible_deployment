@@ -83,7 +83,52 @@
     - name: Reload daemon start and enable Herd-backend
       ansible.builtin.systemd_service:
         name: herd-backend.service
+        enabled: true
         state: restarted
         daemon_reload: true
       become: true
+    
+    - name: Build Herd-agent for backend
+      ansible.builtin.shell: |
+        cd /home/deployment/endpoint/
+        sudo make.sh install
+      become: true
 
+    - name: Set file permissions config.toml
+      ansible.builtin.file:
+        path: /etc/herd/config.toml
+        owner: deployment
+        group: deployment
+      become: true
+
+    - name: Configure systemd service for backend Herd-agent
+      ansible.builtin.copy:
+        dest: /etc/systemd/system/herd-agent.service
+        content: |
+          [Unit]
+          Description=Herd Endpoint Agent Service
+          After=network.target
+          StartLimitIntervalSec=0
+          
+          [Service]
+          Type=simple
+          Restart=always
+          RestartSec=1
+          User=deployment
+          WorkingDirectory=/etc/herd
+          ExecStart=/bin/bash -c "/usr/bin/herdagent"
+          
+          [Install]
+          WantedBy=multi-user.target
+        owner: root
+        group: root
+        mode: '0644'
+      become: true
+
+    - name: Reload daemon start and enable backend Herd-agent
+      ansible.builtin.systemd_service:
+        name: herd-agent.service
+        enabled: true
+        state: restarted
+        daemon_reload: true
+      become: true
