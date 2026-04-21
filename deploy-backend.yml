@@ -49,6 +49,13 @@
         path: /home/deployment/backend/run.sh
         mode: '0775'
 
+    - name: Set perms for data direcotry
+      ansible.builtin.file:
+        path: /home/deployment/backend/data
+        state: directory
+        owner: deployment
+        group: deployment
+
     - name: Configure systemd service for Herd-backend
       ansible.builtin.copy:
         dest: /etc/systemd/system/herd-backend.service
