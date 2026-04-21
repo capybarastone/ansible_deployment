@@ -88,11 +88,14 @@
         daemon_reload: true
       become: true
     
-    - name: Build Herd-agent for backend
-      ansible.builtin.shell: |
-        cd /home/deployment/endpoint/
-        sudo make.sh install
-      become: true
+## Issue when building in Ansible --> Do this step manually for now
+#   - name: Build Herd-agent for backend
+#      ansible.builtin.shell: |
+#        cd /home/deployment/endpoint
+#        sudo ./make.sh install
+#      async: 1
+#      poll: 0
+#      become: true
 
     - name: Set file permissions config.toml
       ansible.builtin.file:
