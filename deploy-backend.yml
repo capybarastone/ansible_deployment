@@ -1,20 +1,82 @@
 ---
-- name: Set up Capy Management Backend
+- name: Set up Herd backend and management
   hosts: backend
   gather_facts: false
 
   tasks:
     - name: Install apt dependencies
-      ansible.builtin.shell: |
-        sudo apt update && sudo apt install -y python3-pip python3-venv pipx git
-    - name: Clone repo
-      ansible.builtin.shell: |
-        cd ~
-        [ -d backend ] && rm -rfv backend
-        git clone https://github.com/capybarastone/backend
+      ansible.builtin.apt:
+        name:
+          - python3-pip
+          - python3-venv
+          - pipx
+          - git
+          - golang-go
+          - build-essential
+        state: present
+        update_cache: yes
+      become: true
+
+    - name: Remove old backend repo if it exists
+      ansible.builtin.file:
+        path: ~/backend
+        state: absent
+
+    - name: Remove old endpoint repo if it exists
+      ansible.builtin.file:
+        path: ~/endpoint
+        state: absent
+
+    - name: Clone backend repo
+      ansible.builtin.git:
+        repo: https://github.com/capybarastone/backend.git
+        dest: ~/backend
+
+    - name: Clone endpoint repo
+      ansible.builtin.git:
+        repo: https://github.com/capybarastone/endpoint.git
+        dest: ~/endpoint
+
     - name: Sync pip dependencies with UV
       ansible.builtin.shell: |
         cd ~
         pipx install uv
         cd ~/backend
         ~/.local/bin/uv sync
+
+    - name: Set file permissions for backend executable
+      ansible.builtin.file:
+        path: /home/deployment/backend/run.sh
+        mode: '0775'
+
+    - name: Configure systemd service for Herd-backend
+      ansible.builtin.copy:
+        dest: /etc/systemd/system/herd-backend.service
+        content: |
+          [Unit]
+          Description=Herd Backend Service
+          After=network.target
+          StartLimitIntervalSec=0
+          
+          [Service]
+          Type=simple
+          Restart=always
+          RestartSec=1
+          User=deployment
+          WorkingDirectory=/home/deployment/backend
+          ExecStart=/home/deployment/backend/run.sh
+
+          [Install]
+          WantedBy=multi-user.target
+        owner: root
+        group: root
+        mode: '0644'
+      become: true
+
+    - name: Reload daemon start and enable Herd-backend
+      ansible.builtin.systemd_service:
+        name: herd-backend.service
+        state: restarted
+        daemon_reload: true
+      become: true
+
