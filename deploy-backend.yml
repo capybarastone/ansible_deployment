@@ -117,7 +117,7 @@
           Type=simple
           Restart=always
           RestartSec=1
-          User=deployment
+          User=root
           WorkingDirectory=/etc/herd
           ExecStart=/bin/bash -c "/usr/bin/herdagent"
           
