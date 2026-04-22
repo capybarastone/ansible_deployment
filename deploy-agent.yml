@@ -1,59 +1,46 @@
 ---
-- name: Set up Capy Management
+- name: Deploy Linux Agents
   hosts: linux
   gather_facts: false
 
   tasks:
+    - name: testing
+  
 
-#    - name: Clone repo
-#      delegate_to: mgmt
-#      run_once: true
-#      ansible.builtin.git:
-#        repo: "https://github.com/capybarastone/endpoint"
-#        dest: '/tmp/ansible/endpoint'
-#        clone: true
-#        update: true
-#
-#    - name: Install build-essential
-#      delegate_to: mgmt
-#      run_once: true
-#      become: true
-#      ansible.builtin.apt:
-#        name: build-essential
-#        state: present
-#        update_cache: yes
-#
-#    - name: Ensure no Go via APT
-#      delegate_to: mgmt
-#      run_once: true
-#      become: true
-#      ansible.builtin.apt:
-#        name: golang-go
-#        state: absent
-#
-#    - name: Get Go Tarball
-#      delegate_to: mgmt
-#      run_once: true
-#      ansible.builtin.get_url:
-#        url: https://go.dev/dl/go1.26.0.linux-amd64.tar.gz
-#        dest: /tmp/go.tar.gz
-#        mode: '0644'
-#
-#    - name: untar go archive
-#      delegate_to: mgmt
-#      run_once: true
-#      become: true
-#      ansible.builtin.shell:
-#        cmd: "tar -C /usr/local -xzf /tmp/go.tar.gz"
-#
-#    - name: Build endpoint for Linux (on MGMT)
-#      delegate_to: mgmt
-#      run_once: true
-#      ansible.builtin.shell: |
-#        cd endpoint
-#        chmod +x ./make.sh
-#        PATH=/usr/local/go/bin:$PATH ./make.sh build
-#        ls
+  
+    - name: Configure systemd service for backend Herd-agent
+      ansible.builtin.copy:
+        dest: /etc/systemd/system/herd-agent.service
+        content: |
+          [Unit]
+          Description=Herd Endpoint Agent Service
+          After=network.target
+          StartLimitIntervalSec=0
+          
+          [Service]
+          Type=simple
+          Restart=always
+          RestartSec=1
+          User=root
+          WorkingDirectory=/etc/herd
+          ExecStart=/bin/bash -c "/usr/bin/herdagent"
+          
+          [Install]
+          WantedBy=multi-user.target
+        owner: root
+        group: root
+        mode: '0644'
+      become: true
+
+    - name: Reload daemon start and enable backend Herd-agent
+      ansible.builtin.systemd_service:
+        name: herd-agent.service
+        enabled: true
+        state: restarted
+        daemon_reload: true
+      become: true
+
+      
   
     - name: Copy exec (linux)
       ansible.builtin.copy:
