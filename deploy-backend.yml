@@ -21,18 +21,21 @@
 
     - name: Remove old backend repo if it exists
       ansible.builtin.file:
-        path: ~/backend
+        path: /home/deployment/backend
         state: absent
+      become: true
 
     - name: Remove old endpoint repo if it exists
       ansible.builtin.file:
-        path: ~/endpoint
+        path: /home/deployment/endpoint
         state: absent
+      become: true
 
     - name: Remove old management repo if it exists
-      ansible.builtin.file:
-        path: ~/management
-        state: absent
+      ansible.builtin.shell: |
+        rm -r /home/deployment/management
+      become: true
+      ignore_errors: true
 
     - name: Clone backend repo
       ansible.builtin.git:
@@ -61,12 +64,17 @@
         path: /home/deployment/backend/run.sh
         mode: '0775'
 
-#    - name: Set perms for data direcotry
-#      ansible.builtin.file:
-#        path: /home/deployment/backend/data
-#        state: directory
-#        owner: deployment
-#        group: deployment
+    - name: make backend env file
+      ansible.builtin.shell: |
+        cp "/home/deployment/backend/.env.example" "/home/deployment/backend/.env"
+
+    - name: update backend env file
+      ansible.builtin.lineinfile:
+        path: /home/deployment/backend/.env
+        regexp: '^SERVER_IPS.*'
+        line: 'SERVER_IPS=192.168.100'
+        state: present
+
 
     - name: Configure systemd service for Herd-backend
       ansible.builtin.copy:
@@ -161,14 +169,54 @@
         daemon_reload: true
       become: true
 
-## Issue when building in Ansible --> Do this step manually for now
-#   - name: Build Herd-agent for backend
-#      ansible.builtin.shell: |
-#        cd /home/deployment/endpoint
-#        sudo ./make.sh install
-#      async: 1
-#      poll: 0
-#      become: true
+    - name: Build Herd-agent for backend and linux agents
+      ansible.builtin.shell: |
+        cd /home/deployment/endpoint
+        sudo ./make.sh install
+      become: true
+
+    - name: Build Herd-agent for windows agents
+      ansible.builtin.shell: |
+        cd /home/deployment/endpoint
+        sudo ./make.sh buildwin
+      become: true
+
+    - name: Update agent config.toml
+      ansible.builtin.lineinfile:
+        path: /home/deployment/endpoint/bin/config.toml
+        regexp: '^server       =.*'
+        line: 'server       = "http://192.168.1.100:8443/api/end/"'
+        state: present
+      become: true
+
+    - name: Update agent config.toml pt.2
+      ansible.builtin.lineinfile:
+        path: /home/deployment/endpoint/bin/config.toml
+        regexp: '^enrollServer =.*'
+        line: 'enrollServer = "http://192.168.1.100:8080/api/enroll"'
+        state: present
+      become: true
+
+    - name: Transfer agent config files to mgmt host
+      ansible.builtin.fetch:
+        src: /home/deployment/endpoint/bin/config.toml
+        dest: ~/ansible_deployment/temp/agent_configs/
+        flat: true
+      become: true
+
+    - name: Transfer linux agent to mgmt host
+      ansible.builtin.fetch:
+        src: /home/deployment/endpoint/bin/herdagent
+        dest: ~/ansible_deployment/temp/agent_configs/
+        flat: true
+      become: true
+
+    - name: Transfer win agent to mgmt host
+      ansible.builtin.fetch:
+        src: /home/deployment/endpoint/bin/herdagent.exe
+        dest: ~/ansible_deployment/temp/agent_configs/
+        flat: true
+      become: true
 
     - name: Configure systemd service for backend Herd-agent
       ansible.builtin.copy:
