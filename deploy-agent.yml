@@ -58,17 +58,17 @@
     - name: Copy exec (linux)
       ansible.builtin.copy:
         src: /home/capped-adm/Documents/endpoint/bin/capyendpoint
-        dest: /home/deployment/capyendpoint
-        owner: deployment
-        group: deployment
+        dest: /usr/bin/herdagent
+        owner: root
+        group: root
         mode: '0755'
 
     - name: Copy config.toml
       ansible.builtin.copy:
         src: /home/capped-adm/Documents/endpoint/bin/config.toml
-        dest: /home/deployment/config.toml
-        owner: deployment
-        group: deployment
+        dest: /etc/herd/config.toml
+        owner: root
+        group: root
         mode: '0644'
 
 
