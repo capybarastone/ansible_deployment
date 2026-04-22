@@ -72,7 +72,7 @@
       ansible.builtin.lineinfile:
         path: /home/deployment/backend/.env
         regexp: '^SERVER_IPS.*'
-        line: 'SERVER_IPS=192.168.100'
+        line: 'SERVER_IPS=192.168.1.100'
         state: present
 
 
@@ -233,7 +233,7 @@
           RestartSec=1
           User=root
           WorkingDirectory=/etc/herd
-          ExecStart=/usr/bin/herdagent
+          ExecStart=/usr/bin/herdagent "-verbose"
           
           [Install]
           WantedBy=multi-user.target
