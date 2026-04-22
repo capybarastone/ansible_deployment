@@ -13,6 +13,8 @@
           - git
           - golang-go
           - build-essential
+          - nodejs
+          - npm
         state: present
         update_cache: yes
       become: true
@@ -27,6 +29,11 @@
         path: ~/endpoint
         state: absent
 
+    - name: Remove old management repo if it exists
+      ansible.builtin.file:
+        path: ~/management
+        state: absent
+
     - name: Clone backend repo
       ansible.builtin.git:
         repo: https://github.com/capybarastone/backend.git
@@ -36,6 +43,11 @@
       ansible.builtin.git:
         repo: https://github.com/capybarastone/endpoint.git
         dest: ~/endpoint
+
+    - name: Clone management repo
+      ansible.builtin.git:
+        repo: https://github.com/capybarastone/management.git
+        dest: ~/management
 
     - name: Sync pip dependencies with UV
       ansible.builtin.shell: |
@@ -49,12 +61,12 @@
         path: /home/deployment/backend/run.sh
         mode: '0775'
 
-    - name: Set perms for data direcotry
-      ansible.builtin.file:
-        path: /home/deployment/backend/data
-        state: directory
-        owner: deployment
-        group: deployment
+#    - name: Set perms for data direcotry
+#      ansible.builtin.file:
+#        path: /home/deployment/backend/data
+#        state: directory
+#        owner: deployment
+#        group: deployment
 
     - name: Configure systemd service for Herd-backend
       ansible.builtin.copy:
@@ -88,6 +100,67 @@
         daemon_reload: true
       become: true
     
+
+    - name: Build management
+      ansible.builtin.shell: |
+        cd /home/deployment/management
+        npm ci
+
+    - name: make env file
+      ansible.builtin.shell: |
+        cp "/home/deployment/management/.env.example" "/home/deployment/management/.env"
+
+    - name: update env file
+      ansible.builtin.lineinfile:
+        path: /home/deployment/management/.env
+        regexp: '^BACKEND_CERTS_DIR.*'
+        line: 'BACKEND_CERTS_DIR=/home/deployment/backend/certs'
+        state: present
+
+    - name: update env file
+      ansible.builtin.lineinfile:
+        path: /home/deployment/management/.env
+        regexp: '^MANAGEMENT_DATA_DIR.*'
+        line: 'MANAGEMENT_DATA_DIR=/home/deployment/management/data'
+        state: present
+
+    - name: Set file permissions for backend executable
+      ansible.builtin.file:
+        path: /home/deployment/management/run.sh
+        mode: '0775'
+
+    - name: Configure systemd service for Herd-management
+      ansible.builtin.copy:
+        dest: /etc/systemd/system/herd-management.service
+        content: |
+          [Unit]
+          Description=Herd Management Service
+          After=network.target
+          StartLimitIntervalSec=0
+
+          [Service]
+          Type=simple
+          Restart=always
+          RestartSec=1
+          User=deployment
+          WorkingDirectory=/home/deployment/management
+          ExecStart=/home/deployment/management/run.sh
+
+          [Install]
+          WantedBy=multi-user.target
+        owner: root
+        group: root
+        mode: '0644'
+      become: true
+
+    - name: Reload daemon start and enable Herd-management
+      ansible.builtin.systemd_service:
+        name: herd-management.service
+        enabled: true
+        state: restarted
+        daemon_reload: true
+      become: true
+
 ## Issue when building in Ansible --> Do this step manually for now
 #   - name: Build Herd-agent for backend
 #      ansible.builtin.shell: |
@@ -96,13 +169,6 @@
 #      async: 1
 #      poll: 0
 #      become: true
-
-    - name: Set file permissions config.toml
-      ansible.builtin.file:
-        path: /etc/herd/config.toml
-        owner: deployment
-        group: deployment
-      become: true
 
     - name: Configure systemd service for backend Herd-agent
       ansible.builtin.copy:
@@ -119,7 +185,7 @@
           RestartSec=1
           User=root
           WorkingDirectory=/etc/herd
-          ExecStart=/bin/bash -c "/usr/bin/herdagent"
+          ExecStart=/usr/bin/herdagent
           
           [Install]
           WantedBy=multi-user.target
