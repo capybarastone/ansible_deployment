@@ -1,12 +1,32 @@
 ---
 - name: Deploy Linux Agents
-  hosts: linux
+  hosts: endpoint_deb,mgmt
+  tags: [ never ]
   gather_facts: false
 
   tasks:
-    - name: testing
-  
+    - name: create directory for linux config.toml
+      ansible.builtin.file:
+        path: /etc/herd
+        state: directory
+        mode: '0600'
+      become: true
 
+    - name: copy config.toml to linux agent
+      ansible.builtin.copy:
+        src: ~/ansible_deployment/temp/agent_configs/config.toml
+        dest: /etc/herd/
+        mode: '0600'
+      become: true
+
+    - name: copy agent exec to endpoint
+      ansible.builtin.copy:
+        src: ~/ansible_deployment/temp/agent_configs/herdagent
+        dest: /usr/bin/
+        mode: '0755'
+        owner: root
+        group: root
+      become: true
   
     - name: Configure systemd service for backend Herd-agent
       ansible.builtin.copy:
@@ -23,7 +43,7 @@
           RestartSec=1
           User=root
           WorkingDirectory=/etc/herd
-          ExecStart=/bin/bash -c "/usr/bin/herdagent"
+          ExecStart=/usr/bin/herdagent "-verbose"
           
           [Install]
           WantedBy=multi-user.target
@@ -38,38 +58,41 @@
         enabled: true
         state: restarted
         daemon_reload: true
-      become: true
-
-      
-  
-    - name: Copy exec (linux)
-      ansible.builtin.copy:
-        src: /home/capped-adm/Documents/endpoint/bin/capyendpoint
-        dest: /usr/bin/herdagent
-        owner: root
-        group: root
-        mode: '0755'
-
-    - name: Copy config.toml
-      ansible.builtin.copy:
-        src: /home/capped-adm/Documents/endpoint/bin/config.toml
-        dest: /etc/herd/config.toml
-        owner: root
-        group: root
-        mode: '0644'
-
+      become: true  
 
 - name: Set up capyagent Windows
   hosts: windows
   gather_facts: false
 
   tasks:
+    - name: Create Agent Directory on Endpoint
+      ansible.windows.win_file:
+        path: C:\herd\
+        state: directory
+
     - name: Copy Endpoint EXE
       ansible.windows.win_copy:
-        src: /home/capped-adm/Documents/endpoint/bin/capyendpoint.exe
-        dest: C:\Users\deployment\Desktop\capyendppoint.exe
+        src: ~/ansible_deployment/temp/agent_configs/herdagent.exe
+        dest: C:\herd\herdagent.exe
 
     - name: Copy Endpoint config
       ansible.windows.win_copy:
-        src: /home/capped-adm/Documents/endpoint/bin/config.toml
-        dest: C:\Users\deployment\Desktop\config.toml
+        src: ~/ansible_deployment/temp/agent_configs/config.toml
+        dest: C:\herd\config.toml
+
+    - name: Download NSSM installer
+      ansible.windows.win_copy:
+        src: ~/ansible_deployment/temp/nssm-2.24-101-g897c7ad.zip
+        dest: C:\herd\nssm-2.24-101-g897c7ad.zip
+
+    - name: Extract NSSM
+      community.windows.win_unzip:
+        src: C:\herd\nssm-2.24-101-g897c7ad.zip
+        dest: C:\herd
+        delete_archive: true
+
+    - name: Configure executable as service with NSSM
+      ansible.windows.win_shell: C:\herd\nssm-2.24-101-g897c7ad\win64\nssm.exe install herd-agent C:\herd\herdagent.exe
+
+    - name: Start and enable service
+      ansible.windows.win_shell: Set-Service -Name "herd-agent" -StartupType Automatic -Status Running

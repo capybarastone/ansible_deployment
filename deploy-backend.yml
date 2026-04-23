@@ -185,7 +185,7 @@
       ansible.builtin.lineinfile:
         path: /home/deployment/endpoint/bin/config.toml
         regexp: '^server       =.*'
-        line: 'server       = "http://192.168.1.100:8443/api/end/"'
+        line: 'server       = "https://192.168.1.100:8443/api/end/"'
         state: present
       become: true
 
@@ -193,7 +193,7 @@
       ansible.builtin.lineinfile:
         path: /home/deployment/endpoint/bin/config.toml
         regexp: '^enrollServer =.*'
-        line: 'enrollServer = "http://192.168.1.100:8080/api/enroll"'
+        line: 'enrollServer = "https://192.168.1.100:8080/api/enroll"'
         state: present
       become: true
 
